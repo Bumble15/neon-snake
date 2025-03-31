@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Snake Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            text-align: center;
+            background: black;
+            color: white;
+        }
+
+        h1 {
+            margin-top: 20px;
+            color: lime;
+        }
+
+        #game-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            background: #111;
+            border: 5px solid lime;
+            margin: 20px auto;
+            display: grid;
+            grid-template-columns: repeat(20, 20px);
+            grid-template-rows: repeat(20, 20px);
+        }
+
+        .snake {
+            background: lime;
+            border-radius: 5px;
+            box-shadow: 0 0 10px lime;
+        }
+
+        .food {
+            background: red;
+            border-radius: 50%;
+            box-shadow: 0 0 10px red;
+        }
+
+        #score {
+            font-size: 1.5rem;
+            margin-top: 10px;
+            color: lime;
+        }
+    </style>
+</head>
+<body>
+    <h1>🐍 Neon Snake Game</h1>
+    <p id="score">Score: 0</p>
+    <div id="game-container"></div>
+
+    <script>
+        const gameContainer = document.getElementById("game-container");
+        const scoreText = document.getElementById("score");
+
+        let snake = [{ x: 10, y: 10 }];
+        let food = { x: 5, y: 5 };
+        let direction = { x: 0, y: 0 };
+        let score = 0;
+        let speed = 200;
+
+        function drawGame() {
+            gameContainer.innerHTML = "";
+
+            // Draw Snake
+            snake.forEach(part => {
+                const snakeElement = document.createElement("div");
+                snakeElement.style.gridColumnStart = part.x;
+                snakeElement.style.gridRowStart = part.y;
+                snakeElement.classList.add("snake");
+                gameContainer.appendChild(snakeElement);
+            });
+
+            // Draw Food
+            const foodElement = document.createElement("div");
+            foodElement.style.gridColumnStart = food.x;
+            foodElement.style.gridRowStart = food.y;
+            foodElement.classList.add("food");
+            gameContainer.appendChild(foodElement);
+        }
+
+        function moveSnake() {
+            const head = { x: snake[0].x + direction.x, y: snake[0].y + direction.y };
+
+            // Check collision with walls
+            if (head.x < 1 || head.x > 20 || head.y < 1 || head.y > 20) {
+                gameOver();
+                return;
+            }
+
+            // Check collision with itself
+            for (let i = 1; i < snake.length; i++) {
+                if (snake[i].x === head.x && snake[i].y === head.y) {
+                    gameOver();
+                    return;
+                }
+            }
+
+            snake.unshift(head);
+
+            // Check if eating food
+            if (head.x === food.x && head.y === food.y) {
+                score++;
+                scoreText.innerText = `Score: ${score}`;
+                spawnFood();
+                speed *= 0.95; // Increase speed
+            } else {
+                snake.pop();
+            }
+        }
+
+        function spawnFood() {
+            food = {
+                x: Math.floor(Math.random() * 20) + 1,
+                y: Math.floor(Math.random() * 20) + 1
+            };
+
+            // Make sure food doesn't spawn on the snake
+            for (let part of snake) {
+                if (part.x === food.x && part.y === food.y) {
+                    spawnFood();
+                    return;
+                }
+            }
+        }
+
+        function gameOver() {
+            alert(`💀 Game Over! Final Score: ${score}`);
+            snake = [{ x: 10, y: 10 }];
+            direction = { x: 0, y: 0 };
+            score = 0;
+            speed = 200;
+            scoreText.innerText = `Score: ${score}`;
+            spawnFood();
+        }
+
+        function updateGame() {
+            if (direction.x !== 0 || direction.y !== 0) moveSnake();
+            drawGame();
+            setTimeout(updateGame, speed);
+        }
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "ArrowUp" && direction.y === 0) direction = { x: 0, y: -1 };
+            if (e.key === "ArrowDown" && direction.y === 0) direction = { x: 0, y: 1 };
+            if (e.key === "ArrowLeft" && direction.x === 0) direction = { x: -1, y: 0 };
+            if (e.key === "ArrowRight" && direction.x === 0) direction = { x: 1, y: 0 };
+        });
+
+        spawnFood();
+        updateGame();
+    </script>
+</body>
+</html>
